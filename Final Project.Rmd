@@ -2,7 +2,10 @@
 title: "Final Project STAT 824"
 author: "Kushal Shah"
 date: "2024-12-12"
-output: word_document
+output:
+  html_document:
+    df_print: paged
+runtime: shiny
 ---
 
 
@@ -15,7 +18,9 @@ library(ggplot2)
 library(DT)
 library(dplyr)
 
+
 data <- read.csv('Car_Sales.csv')
+
 
 data <- data %>%
     select(Manufacturer, Model, Sales_in_thousands, Price_in_thousands, Engine_size, Horsepower, Fuel_efficiency, Curb_weight)%>%
@@ -49,6 +54,7 @@ data <- cbind(data, PC1=pca$x[,1], PC2=pca$x[,2])
 
 # pca visualization
 
+
 ui <- fluidPage(
   titlePanel("Car sales insights for short-term profit maximization"), 
   sidebarLayout(
@@ -65,6 +71,7 @@ ui <- fluidPage(
   )
  ) 
 )
+
 
 
 server <- function(input, output, session){
@@ -87,6 +94,20 @@ server <- function(input, output, session){
 
 
 shinyApp(ui, server)
+
+
+
+
+summary_stats <- data %>%
+  group_by(Manufacturer, Model) %>%
+  summarize(
+    Median_sales = median(Sales_in_thousands, na.rm=TRUE),
+    Median_Price = median(Price_in_thousands, na.rm=TRUE),
+    .groups="drop"
+  )
+summary_stats
+
+
 
 ```
 
