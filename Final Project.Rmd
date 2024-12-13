@@ -1,0 +1,133 @@
+---
+title: "Final Project STAT 824"
+author: "Kushal Shah"
+date: "2024-12-13"
+output: word_document
+---
+
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+library(shiny)
+library(ggplot2)
+library(DT)
+library(dplyr)
+
+data <- read.csv('Car_Sales.csv')
+
+data <- data %>%
+    select(Manufacturer, Model, Sales_in_thousands, Price_in_thousands, Engine_size, Horsepower, Fuel_efficiency, Curb_weight)%>%
+    rename_all(make.names) %>%
+    filter(complete.cases(.))
+
+
+#data <- data[complete.cases(data),]
+#head(data)
+
+
+numeric_data <- data %>%select(where(is.numeric)) 
+ #rename_all(make.names)
+
+
+pca <- prcomp(numeric_data, center=TRUE, scale.=TRUE)
+
+#eigenvalues <- pca$sdev^2
+#var_explained <- eigenvalues / sum(eigenvalues) *100
+
+
+
+#pca_plot <- ggplot(data.frame(PC1 = pca$x[,1],PC2=pca$x[, 2], Manufacturer = data$Manufacturer), aes(x=PC1, y=PC2, color=Manufacturer)) + 
+#  geom_point(size=3) +
+#  labs(title="PCA Biplot", x="PC1", y="PC2", color="Manufacturer")
+
+#pca_plot
+
+data <- cbind(data, PC1=pca$x[,1], PC2=pca$x[,2])
+
+
+# pca visualization
+
+ui <- fluidPage(
+  titlePanel("Car sales insights for short-term profit maximization"), 
+  sidebarLayout(
+      sidebarPanel(
+      selectInput("color_by", "Color points By:", choices=c("Manufacturer", "None"),selected="Manufacturer"),
+      selectInput("x_axis", "Select X-axis variable:", choices=colnames(numeric_data),selected="PC1"),
+      selectInput("y_axis", "Select Y-axis variable:", choices=colnames(numeric_data),selected="PC2")
+  ),
+  mainPanel(
+    tabsetPanel(
+      tabPanel("Dataset", DTOutput("data_table")),
+      tabPanel("PCA Plot", plotOutput("pca_plot"))
+    )
+  )
+ ) 
+)
+
+
+server <- function(input, output, session){
+  output$data_table <- renderDT({datatable(data)})
+  
+  output$pca_plot <- renderPlot({
+    #plot_data <- cbind(data, PC1=pca$x[,1], PC2=pca$x[,2])
+    p <- ggplot(data, aes(x= .data[[input$x_axis]], y = .data[[input$y_axis]]))
+
+    if (input$color_by != "None") p <- p + aes(color=.data[[input$color_by]])
+    
+    p + geom_point(size=3) +
+        labs(
+          title="Car sales and Profit Analysis", 
+          x=input$x_axis, 
+          y=input$y_axis, 
+          color=input$color_by)
+    })
+}
+
+
+shinyApp(ui, server)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
